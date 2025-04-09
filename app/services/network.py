@@ -226,3 +226,70 @@ class NetworkService:
             "timestamp": timestamp.isoformat() if timestamp else None,
             "features": features
         }
+    
+def get_paginated_edges_by_version(
+    self, db: Session, 
+    network_id: int, 
+    version_id: Optional[int] = None,
+    cursor: Optional[str] = None,
+    limit: int = 100
+) -> Dict[str, Any]:
+    """Get paginated network edges by version"""
+    network = self.network_repo.get(db=db, id=network_id)
+    if not network:
+        return None
+    
+    # Get the version to use
+    if version_id:
+        version = db.query(NetworkVersion).filter(
+            NetworkVersion.network_id == network_id,
+            NetworkVersion.version_number == version_id
+        ).first()
+        
+        if not version:
+            return None
+    else:
+        version = self.network_repo.get_latest_version(db=db, network_id=network_id)
+        version_id = version.version_number if version else None
+    
+    # Get paginated edges
+    edges, next_cursor, total_count = self.edge_repo.get_paginated_edges_by_network_version(
+        db=db, 
+        network_id=network_id, 
+        version_id=version.id,
+        cursor=cursor,
+        limit=limit
+    )
+    
+    # Convert to GeoJSON
+    features = []
+    for edge in edges:
+        # Convert edge to GeoJSON feature
+        geom = to_shape(edge.geometry)
+        feature = {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [list(coord) for coord in geom.coords]
+            },
+            "properties": {
+                "id": edge.id,
+                "external_id": edge.external_id,
+                "source_node_id": edge.source_node_id,
+                "target_node_id": edge.target_node_id,
+                "is_current": edge.is_current,
+                "valid_from": edge.valid_from.isoformat(),
+                "valid_to": edge.valid_to.isoformat() if edge.valid_to else None,
+                **edge.properties
+            }
+        }
+        features.append(feature)
+        
+    return {
+        "type": "FeatureCollection",
+        "network_id": network_id,
+        "version": version_id,
+        "features": features,
+        "next_cursor": next_cursor,
+        "total_count": total_count
+    }

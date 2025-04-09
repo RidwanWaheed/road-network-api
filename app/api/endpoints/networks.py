@@ -96,10 +96,12 @@ def get_network_edges(
     network_id: int,
     version: Optional[int] = Query(None, description="Specific version to retrieve"),
     timestamp: Optional[datetime] = Query(None, description="Timestamp for point-in-time retrieval"),
+    cursor: Optional[str] = Query(None, description="Pagination cursor"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of items per page"),
     service: NetworkService = Depends(get_network_service),
     current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Get network edges with optional version or timestamp filtering"""
+    """Get network edges with optional version or timestamp filtering and pagination"""
     # Check if network exists and belongs to customer
     network = service.get(db=db, id=network_id)
     if not network:
@@ -114,8 +116,18 @@ def get_network_edges(
             detail="Access to this network is forbidden"
         )
     
-    # Get edges
-    edges = service.get_edges_by_version(db=db, network_id=network_id, version_id=version, timestamp=timestamp)
+    # Use paginated method if limit is specified or cursor is provided
+    if limit is not None or cursor is not None:
+        edges = service.get_paginated_edges_by_version(
+            db=db, 
+            network_id=network_id, 
+            version_id=version,
+            cursor=cursor,
+            limit=limit
+        )
+    else:
+        edges = service.get_edges_by_version(db=db, network_id=network_id, version_id=version, timestamp=timestamp)
+    
     if not edges:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

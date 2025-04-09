@@ -1,7 +1,8 @@
+import base64
 from datetime import datetime
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from shapely.geometry import LineString
 from geoalchemy2.shape import from_shape
 
@@ -83,3 +84,44 @@ class EdgeRepository(BaseRepository[Edge, EdgeCreate, EdgeUpdate]):
                 Edge.valid_to.is_(None)
             )
         ).all()
+    
+def get_paginated_edges_by_network_version(
+    self, db: Session, *, 
+    network_id: int, 
+    version_id: int, 
+    cursor: Optional[str] = None, 
+    limit: int = 100
+) -> Tuple[List[Edge], Optional[str], int]:
+    """Get paginated edges for a specific network version"""
+    query = db.query(Edge).filter(
+        Edge.network_id == network_id,
+        Edge.version_id == version_id
+    )
+    
+    # Get total count
+    total_count = query.count()
+    
+    # Apply cursor if provided
+    if cursor:
+        try:
+            # Decode the cursor (which is a base64 encoded edge ID)
+            edge_id = int(base64.b64decode(cursor.encode()).decode())
+            query = query.filter(Edge.id > edge_id)
+        except:
+            # If cursor is invalid, ignore it
+            pass
+    
+    # Apply limit
+    edges = query.order_by(Edge.id).limit(limit + 1).all()
+    
+    # Check if there are more results
+    has_more = len(edges) > limit
+    if has_more:
+        edges = edges[:-1]  # Remove the extra item we fetched
+    
+    # Create next cursor if there are more results
+    next_cursor = None
+    if has_more and edges:
+        next_cursor = base64.b64encode(str(edges[-1].id).encode()).decode()
+    
+    return edges, next_cursor, total_count

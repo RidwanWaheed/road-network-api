@@ -1,33 +1,33 @@
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
-from app.db.session import Base
+from app.db.manual_session import Base  # Use the manual session Base for consistency
 from main import app
 from app.db.session import get_db
 
+# PostgreSQL test database URL
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/road_network_test"
 
-# Create in-memory SQLite database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
+# Create the engine
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="function")
 def db():
-    # Create the database
+    # Create the database tables
+    with engine.connect() as connection:
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+        connection.commit()
+    
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
-    # Drop the database after the test
+    # Drop all tables after the test
     Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")

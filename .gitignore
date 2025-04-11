@@ -38,3 +38,9 @@ ENV/
 
 # Local configuration
 .env
+
+# Exclude fix scripts folder
+fix_scripts/
+
+# Exclude test data folder
+tests/data/

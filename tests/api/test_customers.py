@@ -25,11 +25,19 @@ def test_get_customer_by_id(client, db):
     db.commit()
     db.refresh(customer)
     
+    # Debug - Verify customer was created properly
+    db_customer = db.query(Customer).filter(Customer.api_key == "test_key_123").first()
+    print(f"Debug - Created customer: id={db_customer.id}, api_key={db_customer.api_key}")
+    
     # Act - Get the customer via API with authentication
     response = client.get(
         f"/api/customers/{customer.id}",
         headers={"X-API-Key": "test_key_123"}
     )
+    
+    # Debug - Print response details
+    print(f"Debug - Response status: {response.status_code}")
+    print(f"Debug - Response body: {response.text}")
     
     # Assert
     assert response.status_code == 200

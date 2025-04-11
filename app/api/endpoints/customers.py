@@ -2,7 +2,7 @@ from typing import Any, List
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.db.session import get_db
+from app.db.manual_session import get_db
 from app.services.customer import CustomerService
 from app.models.customer import Customer as CustomerModel
 from app.api.dependencies import get_customer_service, get_current_customer

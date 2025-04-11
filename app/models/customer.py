@@ -12,4 +12,4 @@ class Customer(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    networks = relationship("Network", back_populates="customers")
+    networks = relationship("Network", back_populates="customer")

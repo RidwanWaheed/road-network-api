@@ -1,6 +1,6 @@
 # app/services/network.py
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Any
 import uuid
 from geoalchemy2.shape import from_shape, to_shape
@@ -75,7 +75,12 @@ class NetworkService:
         edge_count = len(edges_data)
         
         return NetworkWithVersion(
-            **db_network.__dict__,
+            id=db_network.id,
+            name=db_network.name,
+            description=db_network.description,
+            customer_id=db_network.customer_id,
+            created_at=db_network.created_at,
+            updated_at=db_network.updated_at,
             version=version.version_number,
             node_count=node_count,
             edge_count=edge_count
@@ -100,7 +105,12 @@ class NetworkService:
             edge_count = len(self.edge_repo.get_by_network_version(db=db, network_id=network_id, version_id=current_version.id))
             
             return NetworkWithVersion(
-                **db_network.__dict__,
+                id=db_network.id,
+                name=db_network.name,
+                description=db_network.description,
+                customer_id=db_network.customer_id,
+                created_at=db_network.created_at,
+                updated_at=db_network.updated_at,
                 version=current_version.version_number,
                 node_count=node_count,
                 edge_count=edge_count
@@ -115,7 +125,7 @@ class NetworkService:
         nodes_data, edges_data = extract_nodes_and_edges(geojson_data)
         
         # Current timestamp for versioning
-        current_time = datetime.now(datetime.timezone.utc)()
+        current_time = datetime.now(timezone.utc)
         
         # Mark existing edges as outdated
         existing_edges = self.edge_repo.get_current_by_network(db=db, network_id=network_id)
@@ -159,7 +169,12 @@ class NetworkService:
         edge_count = len(edges_data)
         
         return NetworkWithVersion(
-            **db_network.__dict__,
+            id=db_network.id,
+            name=db_network.name,
+            description=db_network.description,
+            customer_id=db_network.customer_id,
+            created_at=db_network.created_at,
+            updated_at=db_network.updated_at,
             version=new_version.version_number,
             node_count=node_count,
             edge_count=edge_count
@@ -227,69 +242,69 @@ class NetworkService:
             "features": features
         }
     
-def get_paginated_edges_by_version(
-    self, db: Session, 
-    network_id: int, 
-    version_id: Optional[int] = None,
-    cursor: Optional[str] = None,
-    limit: int = 100
-) -> Dict[str, Any]:
-    """Get paginated network edges by version"""
-    network = self.network_repo.get(db=db, id=network_id)
-    if not network:
-        return None
-    
-    # Get the version to use
-    if version_id:
-        version = db.query(NetworkVersion).filter(
-            NetworkVersion.network_id == network_id,
-            NetworkVersion.version_number == version_id
-        ).first()
-        
-        if not version:
+    def get_paginated_edges_by_version(
+        self, db: Session, 
+        network_id: int, 
+        version_id: Optional[int] = None,
+        cursor: Optional[str] = None,
+        limit: int = 100
+        ) -> Dict[str, Any]:
+        """Get paginated network edges by version"""
+        network = self.network_repo.get(db=db, id=network_id)
+        if not network:
             return None
-    else:
-        version = self.network_repo.get_latest_version(db=db, network_id=network_id)
-        version_id = version.version_number if version else None
-    
-    # Get paginated edges
-    edges, next_cursor, total_count = self.edge_repo.get_paginated_edges_by_network_version(
-        db=db, 
-        network_id=network_id, 
-        version_id=version.id,
-        cursor=cursor,
-        limit=limit
-    )
-    
-    # Convert to GeoJSON
-    features = []
-    for edge in edges:
-        # Convert edge to GeoJSON feature
-        geom = to_shape(edge.geometry)
-        feature = {
-            "type": "Feature",
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [list(coord) for coord in geom.coords]
-            },
-            "properties": {
-                "id": edge.id,
-                "external_id": edge.external_id,
-                "source_node_id": edge.source_node_id,
-                "target_node_id": edge.target_node_id,
-                "is_current": edge.is_current,
-                "valid_from": edge.valid_from.isoformat(),
-                "valid_to": edge.valid_to.isoformat() if edge.valid_to else None,
-                **edge.properties
-            }
-        }
-        features.append(feature)
         
-    return {
-        "type": "FeatureCollection",
-        "network_id": network_id,
-        "version": version_id,
-        "features": features,
-        "next_cursor": next_cursor,
-        "total_count": total_count
-    }
+        # Get the version to use
+        if version_id:
+            version = db.query(NetworkVersion).filter(
+                NetworkVersion.network_id == network_id,
+                NetworkVersion.version_number == version_id
+            ).first()
+            
+            if not version:
+                return None
+        else:
+            version = self.network_repo.get_latest_version(db=db, network_id=network_id)
+            version_id = version.version_number if version else None
+        
+        # Get paginated edges
+        edges, next_cursor, total_count = self.edge_repo.get_paginated_edges_by_network_version(
+            db=db, 
+            network_id=network_id, 
+            version_id=version.id,
+            cursor=cursor,
+            limit=limit
+        )
+        
+        # Convert to GeoJSON
+        features = []
+        for edge in edges:
+            # Convert edge to GeoJSON feature
+            geom = to_shape(edge.geometry)
+            feature = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [list(coord) for coord in geom.coords]
+                },
+                "properties": {
+                    "id": edge.id,
+                    "external_id": edge.external_id,
+                    "source_node_id": edge.source_node_id,
+                    "target_node_id": edge.target_node_id,
+                    "is_current": edge.is_current,
+                    "valid_from": edge.valid_from.isoformat(),
+                    "valid_to": edge.valid_to.isoformat() if edge.valid_to else None,
+                    **edge.properties
+                }
+            }
+            features.append(feature)
+            
+        return {
+            "type": "FeatureCollection",
+            "network_id": network_id,
+            "version": version_id,
+            "features": features,
+            "next_cursor": next_cursor,
+            "total_count": total_count
+        }

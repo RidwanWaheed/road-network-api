@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 
-from app.db.session import get_db
+from app.db.manual_session import get_db
 from app.services.network import NetworkService
 from app.models.customer import Customer as CustomerModel
 from app.api.dependencies import get_network_service, get_current_customer
@@ -126,6 +126,7 @@ def get_network_edges(
             limit=limit
         )
     else:
+        print('got here')
         edges = service.get_edges_by_version(db=db, network_id=network_id, version_id=version, timestamp=timestamp)
     
     if not edges:

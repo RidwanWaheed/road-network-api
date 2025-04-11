@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, UniqueConstraint
 
-from app.db.base import Base
+from app.db.base_class import Base
 
 
 class Node(Base):

@@ -2,16 +2,20 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
+import os
 
-from app.db.manual_session import Base  # Use the manual session Base for consistency
+from app.db.base_class import Base
 from main import app
 from app.db.session import get_db
 
-# PostgreSQL test database URL
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/road_network_test"
+# Always use the test database URL for tests
+TEST_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/road_network_test"
 
-# Create the engine
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Force the test database URL regardless of environment settings
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+
+# Create the engine specifically for tests
+engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="function")

@@ -2,7 +2,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status, Header
 
-from app.db.manual_session import get_db
+from app.db.session import get_db
 from app.models.customer import Customer
 from app.repositories.edge import EdgeRepository
 from app.repositories.node import NodeRepository

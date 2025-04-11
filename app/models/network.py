@@ -1,7 +1,7 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, func
 
-from app.db.base import Base
+from app.db.base_class import Base
 
 class Network(Base):
     __tablename__ = "networks"

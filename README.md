@@ -144,6 +144,11 @@ To create a new network, send a POST request to `/api/networks/` with the follow
 }
 ```
 
+## API Usage
+
+For detailed information about API endpoints, request/response formats, and examples, please refer to the [API Documentation](api-documentation.md) file included in this repository.
+
+
 ## Running Tests
 
 ### With Docker:

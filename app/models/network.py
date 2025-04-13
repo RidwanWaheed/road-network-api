@@ -1,7 +1,8 @@
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, func
 
-from app.db.base_class import Base
+from app.db.base import Base
+
 
 class Network(Base):
     __tablename__ = "networks"
@@ -11,10 +12,14 @@ class Network(Base):
     description = Column(Text)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
     customer = relationship("Customer", back_populates="networks")
-    versions = relationship("NetworkVersion", back_populates="network", cascade="all, delete-orphan")
+    versions = relationship(
+        "NetworkVersion", back_populates="network", cascade="all, delete-orphan"
+    )
     nodes = relationship("Node", back_populates="network")
     edges = relationship("Edge", back_populates="network")

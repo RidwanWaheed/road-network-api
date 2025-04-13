@@ -1,8 +1,11 @@
 from typing import Optional
+
 from sqlalchemy.orm import Session
+
 from app.models.customer import Customer
 from app.repositories.base import BaseRepository
 from app.schemas.customer import CustomerCreate, CustomerUpdate
+
 
 class CustomerRepository(BaseRepository[Customer, CustomerCreate, CustomerUpdate]):
     def __init__(self):

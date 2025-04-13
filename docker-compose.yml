@@ -7,6 +7,8 @@ services:
       - "8000:8000"
     volumes:
       - ./:/app
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/roadnetworkdb
       - API_TITLE=Road Network API
@@ -16,15 +18,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
-  
+    networks:
+      - road-api
+
   db:
     image: postgis/postgis:15-3.3
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=roadnetworkdb
-    ports:
-      - "5433:5432"  # Changed to avoid conflict with local PostgreSQL
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,6 +35,30 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - road-api
+
+  db-test:
+    image: postgis/postgis:15-3.3
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=roadnetworkdb
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - road-api
 
 volumes:
   postgres_data:
+  postgres_test_data:
+
+networks:
+  road-api:
+    driver: bridge

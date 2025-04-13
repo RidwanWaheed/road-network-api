@@ -1,7 +1,7 @@
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, UniqueConstraint, func
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, func, UniqueConstraint
 
-from app.db.base_class import Base
+from app.db.base import Base
 
 
 class NetworkVersion(Base):
@@ -13,7 +13,7 @@ class NetworkVersion(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        UniqueConstraint('network_id', 'version_number', name='uix_network_version'),
+        UniqueConstraint("network_id", "version_number", name="uix_network_version"),
     )
 
     # Relatioships

@@ -1,19 +1,21 @@
 from typing import Any, List
-from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.db.session import get_db
-from app.services.customer import CustomerService
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.api.dependencies import get_current_customer, get_customer_service
+from app.db.session import get_session
 from app.models.customer import Customer as CustomerModel
-from app.api.dependencies import get_customer_service, get_current_customer
 from app.schemas.customer import Customer, CustomerCreate, CustomerUpdate
+from app.services.customer import CustomerService
 
 router = APIRouter()
+
 
 @router.post("/", response_model=Customer, status_code=status.HTTP_201_CREATED)
 def create_customer(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_session),
     customer_in: CustomerCreate,
     service: CustomerService = Depends(get_customer_service)
 ) -> Any:
@@ -21,18 +23,19 @@ def create_customer(
     customer = service.create(db=db, obj_in=customer_in)
     return customer
 
+
 @router.get("/me", response_model=Customer)
 def get_current_customer(
-    *,
-    current_customer: CustomerModel = Depends(get_current_customer)
+    *, current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
     """Get current customer"""
     return current_customer
 
+
 @router.get("/{customer_id}", response_model=Customer)
 def get_customer(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_session),
     customer_id: int,
     service: CustomerService = Depends(get_customer_service),
     current_customer: CustomerModel = Depends(get_current_customer)
@@ -42,21 +45,21 @@ def get_customer(
     if current_customer.id != customer_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access to this customer information is forbidden"
+            detail="Access to this customer information is forbidden",
         )
-    
+
     customer = service.get(db=db, id=customer_id)
     if not customer:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Customer not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
         )
     return customer
+
 
 @router.put("/{customer_id}", response_model=Customer)
 def update_customer(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_session),
     customer_id: int,
     customer_in: CustomerUpdate,
     service: CustomerService = Depends(get_customer_service),
@@ -67,8 +70,8 @@ def update_customer(
     if current_customer.id != customer_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only update your own customer information"
+            detail="Can only update your own customer information",
         )
-    
+
     customer = service.update(db=db, id=customer_id, obj_in=customer_in)
     return customer

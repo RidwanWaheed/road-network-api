@@ -67,7 +67,7 @@ pip install -r requirements.txt
 
 4. Create `.env` file with the following content (adjust as needed):
 ```
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/roadnetworkdb
+DATABASE_URL=postgresql://postgres:postgres@db:5432/roadnetworkdb
 API_TITLE=Road Network API
 API_VERSION=0.1.0
 DEBUG=True

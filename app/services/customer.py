@@ -1,10 +1,12 @@
-import string
 import secrets
+import string
 from typing import List, Optional
+
 from sqlalchemy.orm import Session
 
 from app.repositories.customer import CustomerRepository
-from app.schemas.customer import CustomerCreate, CustomerUpdate, Customer
+from app.schemas.customer import Customer, CustomerCreate, CustomerUpdate
+
 
 class CustomerService:
     def __init__(self, repository: CustomerRepository):
@@ -26,7 +28,7 @@ class CustomerService:
             customer_data = obj_in.model_dump()
             customer_data["api_key"] = api_key
             obj_in = CustomerCreate(**customer_data)
-        
+
         return self.repository.create(db=db, obj_in=obj_in)
 
     def update(self, db: Session, id: int, obj_in: CustomerUpdate) -> Customer:

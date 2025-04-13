@@ -1,20 +1,25 @@
-from pydantic import BaseModel
-from typing import Dict, List, Optional, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from geojson_pydantic import LineString as GeoJSONLineString
+from pydantic import BaseModel
+
 
 # Shared properties
 class EdgeBase(BaseModel):
     external_id: Optional[str] = None
     properties: Optional[Dict[str, Any]] = None
 
+
 # Properties to receive on edge creation
 class EdgeCreate(EdgeBase):
     pass
 
+
 # Properties to receive on edge update
 class EdgeUpdate(EdgeBase):
     properties: Optional[Dict[str, Any]] = None
+
 
 # Properties shared by models stored in DB
 class EdgeInDBBase(EdgeBase):
@@ -27,10 +32,9 @@ class EdgeInDBBase(EdgeBase):
     valid_from: datetime
     valid_to: Optional[datetime] = None
     created_at: datetime
-    
-    model_config = {
-        "from_attributes": True
-    }
+
+    model_config = {"from_attributes": True}
+
 
 # Properties to return to client
 class Edge(EdgeInDBBase):

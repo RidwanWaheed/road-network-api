@@ -1,38 +1,47 @@
-import pytest
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
 import os
 
-from app.db.base_class import Base
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+
+from app.db.base import Base
+from app.db.session import get_session
 from main import app
-from app.db.session import get_db
 
-# Always use the test database URL for tests
-TEST_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/road_network_test"
+TEST_DATABASE_URL = "postgresql://postgres:postgres@db-test:5432/roadnetworkdb"
 
-# Force the test database URL regardless of environment settings
+
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 
-# Create the engine specifically for tests
+
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 @pytest.fixture(scope="function")
 def db():
-    # Create the database tables
     with engine.connect() as connection:
+        connection.execute(
+            text("DROP EXTENSION IF EXISTS postgis_tiger_geocoder CASCADE")
+        )
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         connection.commit()
-    
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
-    # Drop all tables after the test
+
+    with engine.connect() as connection:
+        connection.execute(
+            text("DROP EXTENSION IF EXISTS postgis_tiger_geocoder CASCADE")
+        )
+        connection.commit()
+
     Base.metadata.drop_all(bind=engine)
+
 
 @pytest.fixture(scope="function")
 def client(db):
@@ -41,7 +50,8 @@ def client(db):
             yield db
         finally:
             pass
-    app.dependency_overrides[get_db] = override_get_db
+
+    app.dependency_overrides[get_session] = override_get_db
     with TestClient(app) as client:
         yield client
     app.dependency_overrides.clear()

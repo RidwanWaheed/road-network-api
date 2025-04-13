@@ -1,9 +1,17 @@
 from geoalchemy2 import Geometry
-from sqlalchemy.orm import relationship
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, UniqueConstraint
+from sqlalchemy.orm import relationship
 
-from app.db.base_class import Base
+from app.db.base import Base
 
 
 class Node(Base):
@@ -19,11 +27,20 @@ class Node(Base):
 
     # Unique constraint
     __table_args__ = (
-        UniqueConstraint('network_id', 'external_id', 'version_id', name='uix_node_network_external_version'),
+        UniqueConstraint(
+            "network_id",
+            "external_id",
+            "version_id",
+            name="uix_node_network_external_version",
+        ),
     )
 
     # Relationships
     network = relationship("Network", back_populates="nodes")
     version = relationship("NetworkVersion", back_populates="nodes")
-    outgoing_edges = relationship("Edge", foreign_keys="[Edge.source_node_id]", back_populates="source_node")
-    incoming_edges = relationship("Edge", foreign_keys="[Edge.target_node_id]", back_populates="target_node")
+    outgoing_edges = relationship(
+        "Edge", foreign_keys="[Edge.source_node_id]", back_populates="source_node"
+    )
+    incoming_edges = relationship(
+        "Edge", foreign_keys="[Edge.target_node_id]", back_populates="target_node"
+    )

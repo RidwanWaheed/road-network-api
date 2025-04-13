@@ -1,11 +1,14 @@
-from pydantic import BaseModel
-from typing import Generic, TypeVar, List, Optional
+from typing import Generic, List, Optional, TypeVar
 
-T = TypeVar('T')
+from pydantic import BaseModel
+
+T = TypeVar("T")
+
 
 class PaginationParams(BaseModel):
     cursor: Optional[str] = None
     limit: int = 100
+
 
 class PaginatedResponse(BaseModel, Generic[T]):
     items: List[T]

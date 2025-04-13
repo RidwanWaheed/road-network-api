@@ -30,8 +30,7 @@ ENV/
 *.swp
 *.swo
 
-# Docker
-.dockerignore
+.DS_Store
 
 # Logs
 *.log

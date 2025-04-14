@@ -23,174 +23,135 @@ A RESTful API for managing road networks with versioning support, built using Fa
 ## Prerequisites
 
 - Docker and Docker Compose
-- Python 3.11+ (for local development)
-- PostgreSQL with PostGIS extension (for local development without Docker)
+- Make (optional, for convenience commands)
 
 ## Getting Started
 
 ### Using Docker (Recommended)
 
+The entire application is containerized with Docker, making setup and deployment straightforward:
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/yourusername/road-network-api.git
 cd road-network-api
 ```
 
-2. Start the application with Docker Compose:
+2. Start the application:
 ```bash
-docker-compose up -d
+make up
 ```
+This will build and start all the required containers (API and databases).
 
 3. Run database migrations:
 ```bash
-docker-compose exec api alembic upgrade head
+make migrate-db
 ```
 
 4. The API is now available at http://localhost:8000
 
-### Local Development Setup
+### Available Make Commands
 
-1. Clone the repository:
+The project includes a Makefile with convenient commands:
+
 ```bash
-git clone https://github.com/yourusername/road-network-api.git
-cd road-network-api
+# Format code
+make format
+
+# Start the application
+make up
+
+# Shut down the application
+make down
+
+# Remove containers and volumes
+make down_volumes
+
+# Run database migrations
+make migrate-db
+
+# Access application shell
+make enter-app
+
+# Access database shell
+make enter-db
+
+# Access test database shell
+make enter-test-db
+
+# Run tests
+make test
 ```
 
-2. Create a virtual environment and install dependencies:
+## API Usage
+
+For detailed information about API endpoints, request/response formats, and examples, please refer to the [API Documentation](API_DOCUMENTATION.md) file included in this repository.
+
+### Authentication
+
+All API endpoints (except customer creation) require authentication via the `X-API-Key` header.
+
+#### Getting an API Key
+
+1. First, create a customer to receive an API key:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+curl -X POST http://localhost:8000/api/customers/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Example Customer"}'
 ```
 
-3. Set up PostgreSQL with PostGIS extension locally.
-
-4. Create `.env` file with the following content (adjust as needed):
+2. The response will include your API key:
+```json
+{
+  "id": 1,
+  "name": "Example Customer",
+  "api_key": "your_generated_api_key",
+  "created_at": "2025-04-12T15:30:45.123Z"
+}
 ```
-DATABASE_URL=postgresql://postgres:postgres@db:5432/roadnetworkdb
-API_TITLE=Road Network API
-API_VERSION=0.1.0
-DEBUG=True
-```
 
-5. Run database migrations:
+3. Use this API key in subsequent requests:
 ```bash
-alembic upgrade head
+curl -X GET http://localhost:8000/api/networks/ \
+  -H "X-API-Key: your_generated_api_key"
 ```
 
-6. Start the development server:
-```bash
-uvicorn main:app --reload
-```
+### Main Endpoints
 
-7. The API is now available at http://localhost:8000
+- **Customers**: Create and manage API customers
+- **Networks**: Create and manage road networks
+- **Edges**: Query network edges with versioning support
 
 ## Database Schema
 
 ![Database Schema](ERD.png)
 
+The database includes the following primary tables:
 - **customers**: API users with authentication keys
 - **networks**: Road network metadata
 - **network_versions**: Version control for networks
 - **nodes**: Junction points in the network
 - **edges**: Road segments connecting nodes
 
-## API Endpoints
-
-### Authentication
-
-All API endpoints require authentication via the `X-API-Key` header.
-
-### Customers
-
-- `POST /api/customers/`: Create a new customer
-- `GET /api/customers/me`: Get current customer info
-- `GET /api/customers/{customer_id}`: Get customer by ID
-- `PUT /api/customers/{customer_id}`: Update customer
-
-### Networks
-
-- `POST /api/networks/`: Create a new network
-- `GET /api/networks/`: Get all networks for current customer
-- `GET /api/networks/{network_id}`: Get network by ID
-- `PUT /api/networks/{network_id}`: Update network
-- `GET /api/networks/{network_id}/edges`: Get network edges with optional version or timestamp
-
-## Creating a Network
-
-To create a new network, send a POST request to `/api/networks/` with the following JSON:
-
-```json
-{
-  "name": "Bayrischzell Road Network",
-  "description": "Road network for Bayrischzell area",
-  "data": {
-    "type": "FeatureCollection",
-    "features": [
-      {
-        "type": "Feature",
-        "geometry": {
-          "type": "LineString",
-          "coordinates": [[10.0, 47.0], [10.1, 47.1], [10.2, 47.2]]
-        },
-        "properties": {
-          "name": "Test Road",
-          "highway": "residential",
-          "length": 100.5
-        }
-      }
-    ]
-  }
-}
-```
-
-## API Usage
-
-For detailed information about API endpoints, request/response formats, and examples, please refer to the [API Documentation](api-documentation.md) file included in this repository.
-
-
 ## Running Tests
 
-### With Docker:
+Tests are run in a separate containerized environment:
 
 ```bash
-docker-compose exec api pytest
+make test
 ```
 
-### Locally:
-
-```bash
-# Set up test database
-python tests/setup_test_db.py
-
-# Run tests
-pytest
-```
+This command will run all tests against the test database.
 
 ## Development Environment
 
-For a development setup with hot-reloading, use:
-
-```bash
-# Create development docker-compose.override.yml
-cat > docker-compose.override.yml << EOL
-services:
-  api:
-    volumes:
-      - ./:/app
-    environment:
-      - DEBUG=True
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-EOL
-
-# Start with Docker Compose
-docker-compose up -d
-```
+For development with hot-reloading, the Docker configuration automatically mounts the local code directory and enables reload mode for FastAPI.
 
 ## Future Improvements
 
 - Add support for more complex geospatial queries
 - Implement caching layer for frequently accessed networks
+- Create visualization tools for network data
 - Add authentication with JWT tokens
 - Expand analytics capabilities for network usage
 

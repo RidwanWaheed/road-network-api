@@ -28,7 +28,6 @@ def create_network(
     service: NetworkService = Depends(get_network_service),
     current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Create new network"""
     network = service.create(db=db, obj_in=network_in, customer_id=current_customer.id)
     return network
 
@@ -42,7 +41,6 @@ def get_networks(
     service: NetworkService = Depends(get_network_service),
     current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Get networks for current customer"""
     networks = service.get_multi(
         db=db, customer_id=current_customer.id, skip=skip, limit=limit
     )
@@ -57,7 +55,6 @@ def get_network(
     service: NetworkService = Depends(get_network_service),
     current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Get network by ID"""
     network = service.get(db=db, id=network_id)
     if not network:
         raise HTTPException(
@@ -83,8 +80,6 @@ def update_network(
     service: NetworkService = Depends(get_network_service),
     current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Update network"""
-    # Check if network exists and belongs to customer
     network = service.get(db=db, id=network_id)
     if not network:
         raise HTTPException(
@@ -97,7 +92,6 @@ def update_network(
             detail="Access to this network is forbidden",
         )
 
-    # Update network
     updated_network = service.update(db=db, network_id=network_id, obj_in=network_in)
     return updated_network
 
@@ -116,8 +110,6 @@ def get_network_edges(
     service: NetworkService = Depends(get_network_service),
     current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Get network edges with optional version or timestamp filtering and pagination"""
-    # Check if network exists and belongs to customer
     network = service.get(db=db, id=network_id)
     if not network:
         raise HTTPException(
@@ -130,7 +122,6 @@ def get_network_edges(
             detail="Access to this network is forbidden",
         )
 
-    # Use paginated method if limit is specified or cursor is provided
     if limit is not None or cursor is not None:
         edges = service.get_paginated_edges_by_version(
             db=db, network_id=network_id, version_id=version, cursor=cursor, limit=limit

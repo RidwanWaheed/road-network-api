@@ -35,7 +35,6 @@ class Node(Base):
         ),
     )
 
-    # Relationships
     network = relationship("Network", back_populates="nodes")
     version = relationship("NetworkVersion", back_populates="nodes")
     outgoing_edges = relationship(

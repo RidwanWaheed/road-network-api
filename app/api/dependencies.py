@@ -48,7 +48,6 @@ def get_current_customer(
     x_api_key: str = Header(...),
     customer_service: CustomerService = Depends(get_customer_service),
 ) -> Customer:
-    """Validate API key and return customer"""
     customer = customer_service.get_by_api_key(db=db, api_key=x_api_key)
     if not customer:
         raise HTTPException(

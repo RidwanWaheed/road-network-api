@@ -12,5 +12,4 @@ class Customer(Base):
     api_key = Column(String(64), nullable=False, unique=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     networks = relationship("Network", back_populates="customer")

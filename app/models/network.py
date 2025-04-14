@@ -16,7 +16,6 @@ class Network(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    # Relationships
     customer = relationship("Customer", back_populates="networks")
     versions = relationship(
         "NetworkVersion", back_populates="network", cascade="all, delete-orphan"

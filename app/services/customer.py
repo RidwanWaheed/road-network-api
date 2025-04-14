@@ -22,7 +22,6 @@ class CustomerService:
         return self.repository.get_multi(db=db, skip=skip, limit=limit)
 
     def create(self, db: Session, obj_in: CustomerCreate) -> Customer:
-        # Generate API key if not provided
         if not obj_in.api_key:
             api_key = self._generate_api_key()
             customer_data = obj_in.model_dump()
@@ -36,6 +35,5 @@ class CustomerService:
         return self.repository.update(db=db, db_obj=db_obj, obj_in=obj_in)
 
     def _generate_api_key(self, length: int = 32) -> str:
-        """Generate a random API key"""
         alphabet = string.ascii_letters + string.digits
         return "".join(secrets.choice(alphabet) for _ in range(length))

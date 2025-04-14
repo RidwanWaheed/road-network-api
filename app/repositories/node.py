@@ -23,12 +23,9 @@ class NodeRepository(BaseRepository[Node, NodeCreate, NodeUpdate]):
         feature: Dict,
         external_id: str
     ) -> Node:
-        """Create a node from a GeoJSON feature"""
-        # Extract coordinates from GeoJSON
         coordinates = feature["geometry"]["coordinates"]
         point = Point(coordinates[0], coordinates[1])
 
-        # Create node
         db_node = Node(
             network_id=network_id,
             version_id=version_id,
@@ -37,13 +34,12 @@ class NodeRepository(BaseRepository[Node, NodeCreate, NodeUpdate]):
             properties=feature.get("properties", {}),
         )
         db.add(db_node)
-        db.flush()  # Get ID without committing transaction
+        db.flush()
         return db_node
 
     def get_by_external_id(
         self, db: Session, *, network_id: int, version_id: int, external_id: str
     ) -> Optional[Node]:
-        """Get a node by its external ID within a specific network and version"""
         return (
             db.query(Node)
             .filter(
@@ -57,7 +53,6 @@ class NodeRepository(BaseRepository[Node, NodeCreate, NodeUpdate]):
     def get_by_network_version(
         self, db: Session, *, network_id: int, version_id: int
     ) -> List[Node]:
-        """Get all nodes for a specific network version"""
         return (
             db.query(Node)
             .filter(Node.network_id == network_id, Node.version_id == version_id)

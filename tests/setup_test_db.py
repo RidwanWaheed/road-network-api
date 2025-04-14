@@ -12,13 +12,10 @@ def setup_test_db():
     conn.autocommit = True
     cursor = conn.cursor()
 
-    # Check if database exists
     cursor.execute("SELECT 1 FROM pg_database WHERE datname='road_network_test'")
     if not cursor.fetchone():
-        # Create database
         cursor.execute("CREATE DATABASE road_network_test")
 
-    # Connect to the test database
     conn.close()
     conn = psycopg2.connect(
         dbname="road_network_test",
@@ -29,7 +26,6 @@ def setup_test_db():
     conn.autocommit = True
     cursor = conn.cursor()
 
-    # Create PostGIS extension if it doesn't exist
     cursor.execute("CREATE EXTENSION IF NOT EXISTS postgis")
 
     conn.close()
@@ -44,7 +40,6 @@ def teardown_test_db():
     conn.autocommit = True
     cursor = conn.cursor()
 
-    # Terminate all connections to the test database
     cursor.execute(
         "SELECT pg_terminate_backend(pg_stat_activity.pid) "
         "FROM pg_stat_activity "
@@ -52,7 +47,6 @@ def teardown_test_db():
         "AND pid <> pg_backend_pid()"
     )
 
-    # Drop database
     cursor.execute("DROP DATABASE IF EXISTS road_network_test")
 
     conn.close()

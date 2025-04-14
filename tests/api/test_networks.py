@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 
 from app.models.customer import Customer
 
-# Sample GeoJSON data
 SAMPLE_GEOJSON = {
     "type": "FeatureCollection",
     "features": [
@@ -36,32 +35,28 @@ def auth_customer(db):
 
 
 def test_create_network(client, auth_customer):
-    # Arrange
     network_data = {
         "name": "Test Network",
         "description": "A test road network",
         "data": SAMPLE_GEOJSON,
     }
 
-    # Act
     response = client.post(
         "/api/networks/",
         json=network_data,
         headers={"X-API-Key": auth_customer.api_key},
     )
 
-    # Assert
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Test Network"
     assert data["description"] == "A test road network"
     assert data["version"] == 1
-    assert data["node_count"] >= 2  # At least start and end nodes
-    assert data["edge_count"] >= 1  # At least one road
+    assert data["node_count"] >= 2
+    assert data["edge_count"] >= 1
 
 
 def test_get_networks(client, auth_customer, db):
-    # Arrange - Create a network first
     response = client.post(
         "/api/networks/",
         json={
@@ -72,12 +67,10 @@ def test_get_networks(client, auth_customer, db):
         headers={"X-API-Key": auth_customer.api_key},
     )
 
-    # Act
     response = client.get(
         "/api/networks/", headers={"X-API-Key": auth_customer.api_key}
     )
 
-    # Assert
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 1
@@ -85,7 +78,6 @@ def test_get_networks(client, auth_customer, db):
 
 
 def test_get_network_by_id(client, auth_customer):
-    # Arrange - Create a network first
     create_response = client.post(
         "/api/networks/",
         json={
@@ -97,12 +89,10 @@ def test_get_network_by_id(client, auth_customer):
     )
     network_id = create_response.json()["id"]
 
-    # Act
     response = client.get(
         f"/api/networks/{network_id}", headers={"X-API-Key": auth_customer.api_key}
     )
 
-    # Assert
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == network_id
@@ -110,7 +100,6 @@ def test_get_network_by_id(client, auth_customer):
 
 
 def test_update_network(client, auth_customer):
-    # Arrange - Create a network first
     create_response = client.post(
         "/api/networks/",
         json={
@@ -122,11 +111,10 @@ def test_update_network(client, auth_customer):
     )
     network_id = create_response.json()["id"]
 
-    # Act - Update the network
     update_data = {
         "name": "Updated Network",
         "description": "Updated description",
-        "data": SAMPLE_GEOJSON,  # Same data for simplicity
+        "data": SAMPLE_GEOJSON, 
     }
     response = client.put(
         f"/api/networks/{network_id}",
@@ -134,16 +122,14 @@ def test_update_network(client, auth_customer):
         headers={"X-API-Key": auth_customer.api_key},
     )
 
-    # Assert
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Updated Network"
     assert data["description"] == "Updated description"
-    assert data["version"] == 2  # Version should be incremented
+    assert data["version"] == 2 
 
 
 def test_get_network_edges(client, auth_customer):
-    # Arrange - Create a network first
     create_response = client.post(
         "/api/networks/",
         json={
@@ -155,13 +141,11 @@ def test_get_network_edges(client, auth_customer):
     )
     network_id = create_response.json()["id"]
 
-    # Act - Get edges
     response = client.get(
         f"/api/networks/{network_id}/edges",
         headers={"X-API-Key": auth_customer.api_key},
     )
 
-    # Assert
     assert response.status_code == 200
     data = response.json()
     assert data["type"] == "FeatureCollection"
@@ -171,7 +155,6 @@ def test_get_network_edges(client, auth_customer):
 
 
 def test_get_network_edges_with_pagination(client, auth_customer):
-    # Arrange - Create a network first
     create_response = client.post(
         "/api/networks/",
         json={
@@ -183,22 +166,18 @@ def test_get_network_edges_with_pagination(client, auth_customer):
     )
     network_id = create_response.json()["id"]
 
-    # Act - Get edges with pagination
     response = client.get(
         f"/api/networks/{network_id}/edges?limit=1",
         headers={"X-API-Key": auth_customer.api_key},
     )
 
-    # Assert
     assert response.status_code == 200
     data = response.json()
     assert "features" in data
-    assert len(data["features"]) == 1  # Should only have 1 item due to limit
+    assert len(data["features"]) == 1  
 
-    # Check if next_cursor is present for pagination
     assert "next_cursor" in data
 
-    # If the next_cursor is not None, we can test fetching the next page
     if data["next_cursor"]:
         next_response = client.get(
             f"/api/networks/{network_id}/edges?cursor={data['next_cursor']}&limit=1",

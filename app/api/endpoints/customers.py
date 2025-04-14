@@ -19,7 +19,6 @@ def create_customer(
     customer_in: CustomerCreate,
     service: CustomerService = Depends(get_customer_service)
 ) -> Any:
-    """Create new customer"""
     customer = service.create(db=db, obj_in=customer_in)
     return customer
 
@@ -28,7 +27,6 @@ def create_customer(
 def get_current_customer(
     *, current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Get current customer"""
     return current_customer
 
 
@@ -40,7 +38,6 @@ def get_customer(
     service: CustomerService = Depends(get_customer_service),
     current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Get customer by ID"""
     # Only allow a customer to see their own information
     if current_customer.id != customer_id:
         raise HTTPException(
@@ -65,8 +62,6 @@ def update_customer(
     service: CustomerService = Depends(get_customer_service),
     current_customer: CustomerModel = Depends(get_current_customer)
 ) -> Any:
-    """Update customer"""
-    # Only allow a customer to update their own information
     if current_customer.id != customer_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -16,7 +16,6 @@ class NetworkVersion(Base):
         UniqueConstraint("network_id", "version_number", name="uix_network_version"),
     )
 
-    # Relatioships
     network = relationship("Network", back_populates="versions")
     nodes = relationship("Node", back_populates="version")
     edges = relationship("Edge", back_populates="version")

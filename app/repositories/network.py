@@ -26,13 +26,11 @@ class NetworkRepository(BaseRepository[Network, NetworkCreate, NetworkUpdate]):
     def create_with_version(
         self, db: Session, *, obj_in: NetworkCreate, customer_id: int
     ) -> Network:
-        """Create a new network with initial version (1)"""
         network_data = obj_in.model_dump(exclude={"data"})
         db_network = Network(**network_data, customer_id=customer_id)
         db.add(db_network)
-        db.flush()  # Get network ID
+        db.flush()
 
-        # Create initial version
         db_version = NetworkVersion(network_id=db_network.id, version_number=1)
         db.add(db_version)
         db.commit()
@@ -42,7 +40,6 @@ class NetworkRepository(BaseRepository[Network, NetworkCreate, NetworkUpdate]):
     def get_latest_version(
         self, db: Session, *, network_id: int
     ) -> Optional[NetworkVersion]:
-        """Get the latest version of a network"""
         return (
             db.query(NetworkVersion)
             .filter(NetworkVersion.network_id == network_id)
@@ -51,7 +48,6 @@ class NetworkRepository(BaseRepository[Network, NetworkCreate, NetworkUpdate]):
         )
 
     def create_new_version(self, db: Session, *, network_id: int) -> NetworkVersion:
-        """Create a new version for a network (incremented from latest)"""
         latest_version = self.get_latest_version(db, network_id=network_id)
         new_version_num = latest_version.version_number + 1 if latest_version else 1
 

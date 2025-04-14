@@ -5,23 +5,19 @@ from geojson_pydantic import LineString as GeoJSONLineString
 from pydantic import BaseModel
 
 
-# Shared properties
 class EdgeBase(BaseModel):
     external_id: Optional[str] = None
     properties: Optional[Dict[str, Any]] = None
 
 
-# Properties to receive on edge creation
 class EdgeCreate(EdgeBase):
     pass
 
 
-# Properties to receive on edge update
 class EdgeUpdate(EdgeBase):
     properties: Optional[Dict[str, Any]] = None
 
 
-# Properties shared by models stored in DB
 class EdgeInDBBase(EdgeBase):
     id: int
     network_id: int
@@ -36,6 +32,5 @@ class EdgeInDBBase(EdgeBase):
     model_config = {"from_attributes": True}
 
 
-# Properties to return to client
 class Edge(EdgeInDBBase):
     geometry: GeoJSONLineString

@@ -33,7 +33,7 @@ The entire application is containerized with Docker, making setup and deployment
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/road-network-api.git
+git clone https://github.com/RidwanWaheed/road-network-api.git
 cd road-network-api
 ```
 
